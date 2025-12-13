@@ -13,19 +13,21 @@ async function sendGoodMorning() {
     console.log('Fetching Sikh religious information...');
     const religiousInfo = await geminiService.getSikhReligiousInfo();
 
-    const goodMorningMessage = `🌅 **Good Morning! Waheguru Ji Ka Khalsa, Waheguru Ji Ki Fateh!** 🙏
-
-${religiousInfo}
-
-Have a blessed day! ✨`;
+    // have a good day in devnagri
+    const hindiMessage = religiousInfo.hindi + '\n\n'+ 'आपका दिन शुभ हो!';
+    // have a good day in english
+    const englishMessage = religiousInfo.english + '\n\n' + 'Have a great day!';
 
     const masterUserId = process.env.DISCORD_MASTER_ID;
     if (!masterUserId) {
       throw new Error('DISCORD_MASTER_ID environment variable is not set');
     }
 
-    console.log('Sending good morning message...');
-    await discordService.sendMessageToUser(masterUserId, goodMorningMessage);
+    console.log('Sending Hindi message...');
+    await discordService.sendMessageToUser(masterUserId, hindiMessage);
+
+    console.log('Sending English message...');
+    await discordService.sendMessageToUser(masterUserId, englishMessage);
 
     console.log('Message sent successfully!');
   } catch (error) {

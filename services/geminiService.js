@@ -9,7 +9,19 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  */
 async function getSikhReligiousInfo() {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            hindi: { type: "STRING" },
+            english: { type: "STRING" }
+          }
+        }
+      }
+    });
     
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-US', { 
@@ -26,16 +38,21 @@ async function getSikhReligiousInfo() {
 4. Bandi Chhor Divas
 5. Any other important Sikh religious day
 
-If today is significant, provide a brief description (2-3 sentences) about the significance. If today is not a special Sikh religious day, just say "No significant Sikh religious observance today."
-
-Keep the response concise and respectful.`;
+If today is significant, provide a brief description (2-3 sentences) about the significance. Start every message with say "Sat Sri Akal". If today is not a special Sikh religious day qoute a verse from sukhmani sahib and explain its teaching as people dont know exact gurmukhi(always convert gurmukhi manuscript to english or hindi), dont mention today is not a sikh special day or something like this, just in a subtle way add guru's verse/qoute from sukhmani sahib. Keep the response concise and respectful and write your content in 2 language Recommend 1.Hindi 2.English`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+    
+    // Parse the JSON response
+    const parsedResponse = JSON.parse(text);
+    return parsedResponse;
   } catch (error) {
     console.error('Error fetching Sikh religious info:', error);
-    return 'Unable to fetch religious information at this time.';
+    return { 
+      hindi: 'सत श्री अकाल।।',
+      english: 'Sat Sri Akal.'
+    };
   }
 }
 
