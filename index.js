@@ -17,7 +17,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // Function to get Sikh religious information for today
 async function getSikhReligiousInfo() {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-US', { 
@@ -111,7 +111,9 @@ client.once('ready', () => {
   // Note: GitHub Actions will handle the scheduling, but this is for local testing
   cron.schedule('30 0 * * *', () => {
     console.log('Cron job triggered at 6:00 AM IST');
-    sendGoodMorningMessage();
+    sendGoodMorningMessage().catch(error => {
+      console.error('Error in cron job:', error);
+    });
   }, {
     timezone: "UTC"
   });
