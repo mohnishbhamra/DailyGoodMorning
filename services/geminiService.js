@@ -29,7 +29,8 @@ async function getSikhReligiousInfo() {
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
-      day: 'numeric' 
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
     });
     
     const prompt = `Today is ${dateStr}. Please check if today is significant in Sikhism. Specifically check if today is:
@@ -69,13 +70,14 @@ async function getRegionalNews(region) {
     });
     
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { 
+    const dateStr = now.toLocaleString('en-US', { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Asia/Kolkata'
     });
     
     const prompt = `Current date and time: ${dateStr}. Please provide a comprehensive summary of the top news and important events that happened in ${region} in the last 24 hours (yesterday till now). Focus on:
