@@ -29,7 +29,19 @@ async function sendGoodMorning() {
     console.log('Sending English message...');
     await discordService.sendMessageToUser(masterUserId, englishMessage);
 
-    console.log('Message sent successfully!');
+    console.log('Fetching India news...');
+    const indiaNews = await geminiService.getRegionalNews('India');
+    
+    console.log('Sending India news...');
+    await discordService.sendMessageToUser(masterUserId, indiaNews);
+
+    console.log('Fetching Bengaluru news...');
+    const bengaluruNews = await geminiService.getRegionalNews('Bengaluru');
+    
+    console.log('Sending Bengaluru news...');
+    await discordService.sendMessageToUser(masterUserId, bengaluruNews);
+
+    console.log('All messages sent successfully!');
   } catch (error) {
     console.error('Error in sendGoodMorning:', error);
     throw error;

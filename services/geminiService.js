@@ -2,6 +2,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const MODEL_NAME = "gemini-2.5-flash";
 
 /**
  * Get Sikh religious information for today
@@ -10,7 +11,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 async function getSikhReligiousInfo() {
   try {
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
+      model: MODEL_NAME,
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -56,6 +57,54 @@ If today is significant, provide a brief description (2-3 sentences) about the s
   }
 }
 
+/**
+ * Get news and updates for a specific region from the last 24 hours
+ * @param {string} region - The region to get news for (e.g., 'India', 'Bengaluru')
+ * @returns {Promise<Object>} News updates in Hindi and English
+ */
+async function getRegionalNews(region) {
+  try {
+    const model = genAI.getGenerativeModel({ 
+      model: MODEL_NAME
+    });
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const prompt = `Current date and time: ${dateStr}. Please provide a comprehensive summary of the top news and important events that happened in ${region} in the last 24 hours (yesterday till now). Focus on:
+1. Weather and environmental news
+2. Major Geopolitical developments
+3. Major Stock market and investment related developments
+4. Major political developments
+5. Economic news and business updates
+6. Social issues and significant events
+7. Technology and innovation news
+8. Sports updates
+9. Any other noteworthy developments
+10. Bollywood and Hindi Television Entertainment news
+
+
+Provide a detailed summary (8-10 bullet points) covering the most important and relevant news. Keep the tone informative and neutral. Write the content in English only.
+
+Format: Start with a bold heading mentioning the region and time period, followed by bullet points.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error(`Error fetching news for ${region}:`, error);
+    return `Unable to fetch news for ${region} at this time.`;
+  }
+}
+
 module.exports = {
-  getSikhReligiousInfo
+  getSikhReligiousInfo,
+  getRegionalNews
 };

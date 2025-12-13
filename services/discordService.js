@@ -45,8 +45,61 @@ async function sendMessageToUser(userId, message) {
 
   try {
     const user = await client.users.fetch(userId);
-    await user.send(message);
-    console.log(`Message sent to user: ${user.tag}`);
+    
+    // Add newline at the end for better message separation
+    const messageWithNewline = message + '\n';
+    
+    // Discord message limit is 2000 characters
+    const DISCORD_MESSAGE_LIMIT = 2000;
+    
+    // If message is within limit, send it directly
+    if (messageWithNewline.length <= DISCORD_MESSAGE_LIMIT) {
+      await user.send(messageWithNewline);
+      console.log(`Message sent to user: ${user.tag}`);
+      return;
+    }
+    
+    // Split message into chunks if it exceeds the limit
+    const chunks = [];
+    let currentChunk = '';
+    const lines = messageWithNewline.split('\n');
+    
+    for (const line of lines) {
+      // If adding this line exceeds limit, save current chunk and start new one
+      if ((currentChunk + line + '\n').length > DISCORD_MESSAGE_LIMIT) {
+        if (currentChunk) {
+          chunks.push(currentChunk.trim());
+        }
+        // If a single line is too long, split it further
+        if (line.length > DISCORD_MESSAGE_LIMIT) {
+          let remainingLine = line;
+          while (remainingLine.length > 0) {
+            chunks.push(remainingLine.substring(0, DISCORD_MESSAGE_LIMIT));
+            remainingLine = remainingLine.substring(DISCORD_MESSAGE_LIMIT);
+          }
+          currentChunk = '';
+        } else {
+          currentChunk = line + '\n';
+        }
+      } else {
+        currentChunk += line + '\n';
+      }
+    }
+    
+    // Add the last chunk if it exists
+    if (currentChunk.trim()) {
+      chunks.push(currentChunk.trim());
+    }
+    
+    // Send all chunks with a small delay between them
+    for (let i = 0; i < chunks.length; i++) {
+      await user.send(chunks[i]);
+      console.log(`Message chunk ${i + 1}/${chunks.length} sent to user: ${user.tag}`);
+      // Small delay to avoid rate limiting
+      if (i < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
   } catch (error) {
     console.error(`Error sending message to user ${userId}:`, error);
     throw error;
