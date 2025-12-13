@@ -122,7 +122,7 @@ Have a blessed day! ✨
 
 - **Timezone**: The bot is configured for IST (Indian Standard Time)
 - **Schedule**: Daily at 6:00 AM IST (00:30 UTC)
-- **AI Model**: Google Gemini Pro
+- **AI Model**: Google Gemini 1.5 Flash
 
 ## Troubleshooting
 
