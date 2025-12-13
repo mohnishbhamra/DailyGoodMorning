@@ -86,11 +86,6 @@ async function getRegionalNews(region) {
 3. Major Stock market and investment related developments
 4. Major political developments
 5. Economic news and business updates
-6. Social issues and significant events
-7. Technology and innovation news
-8. Sports updates
-9. Any other noteworthy developments
-10. Bollywood and Hindi Television Entertainment news
 
 
 Provide a detailed summary (8-10 bullet points) covering the most important and relevant news. Keep the tone informative and neutral. Write the content in English only.
