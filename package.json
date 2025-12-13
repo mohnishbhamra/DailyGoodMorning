@@ -1,0 +1,24 @@
+{
+  "name": "dailygoodmorning",
+  "version": "1.0.0",
+  "description": "DailyGoodMorning App which sends information and wishes in morning",
+  "main": "sendGoodmorning.js",
+  "scripts": {
+    "start": "node sendGoodmorning.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "sikh",
+    "good-morning",
+    "gemini"
+  ],
+  "author": "Mohnish Bhamra",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.2.3"
+  }
+}
