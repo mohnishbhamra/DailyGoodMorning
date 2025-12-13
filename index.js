@@ -61,34 +61,42 @@ ${religiousInfo}
 Have a blessed day! ✨`;
 
     // Send message to all guilds the bot is in
-    client.guilds.cache.forEach(async (guild) => {
-      try {
-        // Find a suitable channel to send the message
-        // Priority: #general, #good-morning, first text channel
-        let channel = guild.channels.cache.find(ch => 
-          ch.name === 'general' && ch.isTextBased()
-        );
-        
-        if (!channel) {
-          channel = guild.channels.cache.find(ch => 
-            ch.name === 'good-morning' && ch.isTextBased()
+    const sendPromises = [];
+    
+    for (const guild of client.guilds.cache.values()) {
+      const promise = (async () => {
+        try {
+          // Find a suitable channel to send the message
+          // Priority: #general, #good-morning, first text channel
+          let channel = guild.channels.cache.find(ch => 
+            ch.name === 'general' && ch.isTextBased()
           );
+          
+          if (!channel) {
+            channel = guild.channels.cache.find(ch => 
+              ch.name === 'good-morning' && ch.isTextBased()
+            );
+          }
+          
+          if (!channel) {
+            channel = guild.channels.cache.find(ch => ch.isTextBased());
+          }
+          
+          if (channel) {
+            await channel.send(goodMorningMessage);
+            console.log(`Message sent to guild: ${guild.name}`);
+          } else {
+            console.log(`No suitable channel found in guild: ${guild.name}`);
+          }
+        } catch (error) {
+          console.error(`Error sending message to guild ${guild.name}:`, error);
         }
-        
-        if (!channel) {
-          channel = guild.channels.cache.find(ch => ch.isTextBased());
-        }
-        
-        if (channel) {
-          await channel.send(goodMorningMessage);
-          console.log(`Message sent to guild: ${guild.name}`);
-        } else {
-          console.log(`No suitable channel found in guild: ${guild.name}`);
-        }
-      } catch (error) {
-        console.error(`Error sending message to guild ${guild.name}:`, error);
-      }
-    });
+      })();
+      
+      sendPromises.push(promise);
+    }
+    
+    await Promise.allSettled(sendPromises);
   } catch (error) {
     console.error('Error in sendGoodMorningMessage:', error);
   }
@@ -115,9 +123,10 @@ client.once('ready', () => {
     console.log('Running in one-time execution mode');
     sendGoodMorningMessage().then(() => {
       console.log('Message sent, exiting...');
-      setTimeout(() => {
-        process.exit(0);
-      }, 5000); // Wait 5 seconds for message to be sent
+      process.exit(0);
+    }).catch(error => {
+      console.error('Error in one-time execution:', error);
+      process.exit(1);
     });
   }
 });
