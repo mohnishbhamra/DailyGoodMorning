@@ -105,7 +105,60 @@ Format: Start with a bold heading mentioning the region and time period, followe
   }
 }
 
+/**
+ * Summarize news articles using AI
+ * @param {string} newsText - The raw news text to summarize
+ * @param {string} category - The category of news (e.g., 'Business', 'National')
+ * @param {number} numArticles - Number of articles in the feed
+ * @returns {Promise<string>} Summarized news
+ */
+async function summarizeNews(newsText, category, numArticles) {
+  try {
+    const model = genAI.getGenerativeModel({ 
+      model: MODEL_NAME
+    });
+    
+    const now = new Date();
+    const dateStr = now.toLocaleString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Kolkata'
+    });
+    
+    const prompt = `Current date and time: ${dateStr}
+
+I have ${numArticles} ${category} news articles from The Hindu RSS feed. Please analyze and provide a well-structured summary.
+
+News Articles:
+${newsText}
+
+Please provide:
+1. A brief overview (2-3 sentences) of the major themes and trends
+2. Top 5-7 most significant news stories with:
+   - Clear headline
+   - Key points (2-3 bullet points per story)
+   - Why it matters
+3. Any important market/economic implications (for business news)
+
+Format your response in a clear, easy-to-read structure with appropriate emojis and formatting for Discord/messaging platforms. Start with "📰 *${category} News Summary*" as the heading.
+
+Keep the tone professional yet accessible.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error(`Error summarizing ${category} news:`, error);
+    return `Unable to summarize ${category} news at this time.`;
+  }
+}
+
 module.exports = {
   getSikhReligiousInfo,
-  getRegionalNews
+  getRegionalNews,
+  summarizeNews
 };
