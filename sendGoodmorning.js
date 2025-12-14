@@ -29,11 +29,11 @@ async function sendGoodMorning() {
     console.log('Sending English message...');
     await discordService.sendMessageToUser(masterUserId, englishMessage);
 
-    console.log('Fetching India news...');
-    const indiaNews = await geminiService.getRegionalNews('India');
+    // console.log('Fetching India news...');
+    // const indiaNews = await geminiService.getRegionalNews('India');
     
-    console.log('Sending India news...');
-    await discordService.sendMessageToUser(masterUserId, indiaNews);
+    // console.log('Sending India news...');
+    // await discordService.sendMessageToUser(masterUserId, indiaNews);
 
     // console.log('Fetching Bengaluru news...');
     // const bengaluruNews = await geminiService.getRegionalNews('Bengaluru');
