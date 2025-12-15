@@ -42,7 +42,7 @@ async function getSikhReligiousInfo() {
 Must start every message with say "Sat Sri Akal" and than any msg content in new line \n
 Must not mention today date or something like today
 If today is significant, provide a brief description (2-3 sentences) about the significance.
-If today is not a special Sikh religious day qoute a verse from sukhmani sahib and explain its teaching as people dont know exact gurmukhi(always convert gurmukhi manuscript to english or hindi), dont mention today is not a sikh special day or something like this, just in a subtle way add guru's verse/qoute from sukhmani sahib.
+If today is not a special Sikh religious day qoute a verse from sukhmani sahib in hindi and explain its teaching in hindi as people dont know exact gurmukhi(always convert gurmukhi manuscript to hindi), dont mention today is not a sikh special day or something like this, just in a subtle way add guru's verse/qoute from sukhmani sahib.
 Keep the response concise and respectful.
 Must write your content in 2 language Recommend 1.Hindi 2.English`;
 
