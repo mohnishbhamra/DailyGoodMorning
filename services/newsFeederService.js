@@ -1,4 +1,5 @@
 const Parser = require('rss-parser');
+const geminiService = require('./geminiService');
 
 /**
  * Service to fetch and parse RSS news feeds
@@ -15,7 +16,15 @@ class NewsFeederService {
     
     this.feeds = {
       business: 'https://www.thehindu.com/business/feeder/default.rss',
-      national: 'https://www.thehindu.com/news/national/feeder/default.rss'
+      national: 'https://www.thehindu.com/news/national/feeder/default.rss',
+      bangalore: 'https://www.thehindu.com/news/cities/bangalore/feeder/default.rss'
+    };
+
+    // Configuration for each news category - just add new categories here
+    this.categoryConfig = {
+      business: { feedKey: 'business', displayName: 'Business' },
+      national: { feedKey: 'national', displayName: 'National' },
+      bangalore: { feedKey: 'bangalore', displayName: 'Bangalore' }
     };
   }
 
@@ -44,31 +53,22 @@ class NewsFeederService {
   }
 
   /**
-   * Get business news from The Hindu
+   * Generic method to get news by category
+   * @param {string} category - News category key (must exist in feeds object)
    * @param {number} limit - Number of news items to fetch (default: 10)
-   * @returns {Promise<Array>} - Array of business news items
+   * @returns {Promise<Array>} - Array of news items
    */
-  async getBusinessNews(limit = 10) {
-    try {
-      const news = await this.fetchFeed(this.feeds.business);
-      return news.slice(0, limit);
-    } catch (error) {
-      console.error('Error fetching business news:', error.message);
-      throw error;
+  async getNewsByCategory(category, limit = 10) {
+    const feedUrl = this.feeds[category];
+    if (!feedUrl) {
+      throw new Error(`Unknown news category: ${category}. Available categories: ${Object.keys(this.feeds).join(', ')}`);
     }
-  }
 
-  /**
-   * Get national news from The Hindu
-   * @param {number} limit - Number of news items to fetch (default: 10)
-   * @returns {Promise<Array>} - Array of national news items
-   */
-  async getNationalNews(limit = 10) {
     try {
-      const news = await this.fetchFeed(this.feeds.national);
+      const news = await this.fetchFeed(feedUrl);
       return news.slice(0, limit);
     } catch (error) {
-      console.error('Error fetching national news:', error.message);
+      console.error(`Error fetching ${category} news:`, error.message);
       throw error;
     }
   }
@@ -117,6 +117,55 @@ class NewsFeederService {
     });
     
     return newsText;
+  }
+
+  /**
+   * Get news summary for a specific category (RSS feed based)
+   * @param {string} category - News category ('business', 'national', 'bangalore')
+   * @param {Object} options - Options for news delivery
+   * @param {boolean} options.summarize - Whether to summarize news using AI (default: true)
+   * @param {number} options.limit - Number of news items to fetch (default: 10)
+   * @returns {Promise<string>} - Formatted or summarized news ready to send
+   */
+  async getNewsSummary(category, options = {}) {
+    const { summarize = true, limit = 10 } = options;
+    
+    const config = this.categoryConfig[category.toLowerCase()];
+    if (!config) {
+      throw new Error(`Unknown news category: ${category}. Available categories: ${Object.keys(this.categoryConfig).join(', ')}`);
+    }
+    
+    try {
+      console.log(`Fetching ${config.displayName} news from RSS feed...`);
+      const news = await this.getNewsByCategory(config.feedKey, limit);
+      
+      if (!news || news.length === 0) {
+        console.log(`No ${config.displayName} news available`);
+        return `⚠️ No ${config.displayName} news available at the moment.`;
+      }
+      
+      if (summarize) {
+        try {
+          console.log(`Summarizing ${config.displayName} news with AI...`);
+          const newsForAI = this.formatNewsForSummarization(news);
+          const summary = await geminiService.summarizeNews(newsForAI, config.displayName, news.length);
+          
+          console.log(`${config.displayName} news summarized successfully`);
+          return summary;
+        } catch (aiError) {
+          console.error('AI summarization failed, falling back to raw news:', aiError.message);
+          console.log(`Using raw ${config.displayName} news as fallback...`);
+          const formattedNews = this.formatNewsForDisplay(news, config.displayName);
+          return `⚠️ AI summarization unavailable. Sending raw news:\n\n${formattedNews}`;
+        }
+      } else {
+        console.log(`Formatting raw ${config.displayName} news...`);
+        return this.formatNewsForDisplay(news, config.displayName);
+      }
+    } catch (error) {
+      console.error(`Error fetching ${config.displayName} news:`, error);
+      return `❌ Error fetching ${config.displayName} news. Please try again later.`;
+    }
   }
 }
 

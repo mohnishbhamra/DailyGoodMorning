@@ -1,6 +1,6 @@
 require('dotenv').config();
 const discordService = require('./services/discordService');
-const geminiService = require('./services/geminiService');
+const greetService = require('./services/greetService');
 const newsFeederService = require('./services/newsFeederService');
 
 /**
@@ -8,134 +8,33 @@ const newsFeederService = require('./services/newsFeederService');
  * @param {string} userId - Discord user ID
  */
 async function greet(userId) {
-  console.log('Fetching Sikh religious information...');
-  const religiousInfo = await geminiService.getSikhReligiousInfo();
-
-  //prepend sat shri akal in hindi have a good day in devnagri
-  const hindiMessage = 'सत श्री अकाल।।\n' + religiousInfo.hindi + '\n\n'+ 'आपका दिन शुभ हो!';
-  // have a good day in english
-  const englishMessage = 'Sat Sri Akal.\n' + religiousInfo.english + '\n\n' + 'Have a great day!';
+  const greetingMessages = await greetService.generateGreetingMessages();
 
   console.log('Sending Hindi message...');
-  await discordService.sendMessageToUser(userId, hindiMessage);
+  await discordService.sendMessageToUser(userId, greetingMessages.hindi);
 
   console.log('Sending English message...');
-  await discordService.sendMessageToUser(userId, englishMessage);
+  await discordService.sendMessageToUser(userId, greetingMessages.english);
 }
 
 /**
- * Send nation-level news
+ * Send news from RSS feed for a specific category
  * @param {string} userId - Discord user ID
- * @param {string} nation - Nation name (default: 'India')
- */
-async function sendNationNews(userId, nation = 'India') {
-  console.log(`Fetching ${nation} news...`);
-  const news = await geminiService.getRegionalNews(nation);
-  
-  console.log(`Sending ${nation} news...`);
-  await discordService.sendMessageToUser(userId, news);
-}
-
-/**
- * Send regional news
- * @param {string} userId - Discord user ID
- * @param {string} region - Region name
- */
-async function sendRegionalNews(userId, region) {
-  console.log(`Fetching ${region} news...`);
-  const news = await geminiService.getRegionalNews(region);
-  
-  console.log(`Sending ${region} news...`);
-  await discordService.sendMessageToUser(userId, news);
-}
-
-/**
- * Send business news from RSS feed
- * @param {string} userId - Discord user ID
+ * @param {string} category - News category ('business', 'national', 'bangalore')
  * @param {Object} options - Options for news delivery
  * @param {boolean} options.summarize - Whether to summarize news using AI (default: true)
  * @param {number} options.limit - Number of news items to fetch (default: 10)
  */
-async function sendBusinessNews(userId, options = {}) {
-  const { summarize = true, limit = 10 } = options;
-  
+async function sendNewsFromRSSFeed(userId, category, options = {}) {
   try {
-    console.log('Fetching business news from RSS feed...');
-    const businessNews = await newsFeederService.getBusinessNews(limit);
+    const newsSummary = await newsFeederService.getNewsSummary(category, options);
+    await discordService.sendMessageToUser(userId, newsSummary);
     
-    if (!businessNews || businessNews.length === 0) {
-      console.log('No business news available');
-      await discordService.sendMessageToUser(userId, '⚠️ No business news available at the moment.');
-      return;
-    }
-    
-    if (summarize) {
-      try {
-        console.log('Summarizing business news with AI...');
-        const newsForAI = newsFeederService.formatNewsForSummarization(businessNews);
-        const summary = await geminiService.summarizeNews(newsForAI, 'Business', businessNews.length);
-        
-        console.log('Sending summarized business news...');
-        await discordService.sendMessageToUser(userId, summary);
-      } catch (aiError) {
-        console.error('AI summarization failed, falling back to raw news:', aiError.message);
-        console.log('Sending raw business news as fallback...');
-        const formattedNews = newsFeederService.formatNewsForDisplay(businessNews, 'Business');
-        await discordService.sendMessageToUser(userId, '⚠️ AI summarization unavailable. Sending raw news:\n\n' + formattedNews);
-      }
-    } else {
-      console.log('Sending raw business news...');
-      const formattedNews = newsFeederService.formatNewsForDisplay(businessNews, 'Business');
-      await discordService.sendMessageToUser(userId, formattedNews);
-    }
+    // Add delay after sending to avoid Discord rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
   } catch (error) {
-    console.error('Error sending business news:', error);
-    await discordService.sendMessageToUser(userId, '❌ Error fetching business news. Please try again later.');
-  }
-}
-
-/**
- * Send national news from RSS feed
- * @param {string} userId - Discord user ID
- * @param {Object} options - Options for news delivery
- * @param {boolean} options.summarize - Whether to summarize news using AI (default: true)
- * @param {number} options.limit - Number of news items to fetch (default: 10)
- */
-async function sendNationalNews(userId, options = {}) {
-  const { summarize = true, limit = 10 } = options;
-  
-  try {
-    console.log('Fetching national news from RSS feed...');
-    const nationalNews = await newsFeederService.getNationalNews(limit);
-    
-    if (!nationalNews || nationalNews.length === 0) {
-      console.log('No national news available');
-      await discordService.sendMessageToUser(userId, '⚠️ No national news available at the moment.');
-      return;
-    }
-    
-    if (summarize) {
-      try {
-        console.log('Summarizing national news with AI...');
-        const newsForAI = newsFeederService.formatNewsForSummarization(nationalNews);
-        const summary = await geminiService.summarizeNews(newsForAI, 'National', nationalNews.length);
-        
-        console.log('Sending summarized national news...');
-        await discordService.sendMessageToUser(userId, summary);
-      } catch (aiError) {
-        console.error('AI summarization failed, falling back to raw news:', aiError.message);
-        console.log('Sending raw national news as fallback...');
-        const formattedNews = newsFeederService.formatNewsForDisplay(nationalNews, 'National');
-        await discordService.sendMessageToUser(userId, '⚠️ AI summarization unavailable. Sending raw news:\n\n' + formattedNews);
-      }
-    } else {
-      console.log('Sending raw national news...');
-      const formattedNews = newsFeederService.formatNewsForDisplay(nationalNews, 'National');
-      await discordService.sendMessageToUser(userId, formattedNews);
-    }
-  } catch (error) {
-    console.error('Error sending national news:', error);
-    await discordService.sendMessageToUser(userId, '❌ Error fetching national news. Please try again later.');
+    console.error(`Error sending ${category} news:`, error);
+    await discordService.sendMessageToUser(userId, `❌ Error processing ${category} news. Please try again later.`);
   }
 }
 
@@ -160,9 +59,12 @@ async function sendGoodMorning() {
     
     // Send RSS feed news - you can choose to summarize or send raw
     // Option 1: Send summarized news (default)
-    await sendBusinessNews(masterUserId, { summarize: true, limit: 10 });
-    await sendNationalNews(masterUserId, { summarize: true, limit: 10 });
+    await sendNewsFromRSSFeed(masterUserId, 'business', { summarize: true, limit: 10 });
+    await sendNewsFromRSSFeed(masterUserId, 'national', { summarize: true, limit: 10 });
+    await sendNewsFromRSSFeed(masterUserId, 'bangalore', { summarize: true, limit: 10 });
     
+    // Wait a bit before destroying client to ensure all messages are sent
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     console.log('All messages sent successfully!');
   } catch (error) {
