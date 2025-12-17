@@ -1,8 +1,25 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const fs = require('fs').promises;
+const path = require('path');
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODEL_NAME = "gemini-2.5-flash";
+
+/**
+ * Read Sukhmani Sahib text from file
+ * @returns {Promise<string>} Full text of Sukhmani Sahib
+ */
+async function readSukhmaniSahib() {
+  try {
+    const filePath = path.join(__dirname, '..', 'assets', 'sukhmani_sahib.txt');
+    const content = await fs.readFile(filePath, 'utf-8');
+    return content;
+  } catch (error) {
+    console.error('Error reading Sukhmani Sahib file:', error);
+    return '';
+  }
+}
 
 /**
  * Get Sikh religious information for today
@@ -33,18 +50,25 @@ async function getSikhReligiousInfo() {
       timeZone: 'Asia/Kolkata'
     });
     
+    // Read Sukhmani Sahib text
+    const sukhmaniSahibText = await readSukhmaniSahib();
+    
     const prompt = `Today is ${dateStr}. Please check if today is significant in Sikhism also check by NanakShahi calendar. Specifically check if today is:
 1. Birthday (Parkash Purab) of any of the 10 Sikh Gurus
 2. Martyrdom day (Shaheedi Divas) of any Sikh Guru
 3. Sangrand (first day of a month in the Nanakshahi calendar)
 4. Bandi Chhor Divas
 5. Any other important Sikh religious day
-Must start every message with say "Sat Sri Akal" and than any msg content in new line \n
 Must not mention today date or something like today
 If today is significant, provide a brief description (2-3 sentences) about the significance.
 If today is not a special Sikh religious day qoute a verse from sukhmani sahib in hindi and explain its teaching in hindi as people dont know exact gurmukhi(always convert gurmukhi manuscript to hindi), dont mention today is not a sikh special day or something like this, just in a subtle way add guru's verse/qoute from sukhmani sahib.
 Keep the response concise and respectful.
-Must write your content in 2 language Recommend 1.Hindi 2.English`;
+Must write your content in 2 language Recommend 1.Hindi 2.English
+
+Here is the complete text of Sukhmani Sahib for accurate reference:
+${sukhmaniSahibText}
+
+IMPORTANT: When quoting from Sukhmani Sahib, use the EXACT text provided above. Do not paraphrase or modify the verses.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -156,6 +180,8 @@ Keep the tone professional yet accessible.`;
     return `Unable to summarize ${category} news at this time.`;
   }
 }
+
+
 
 module.exports = {
   getSikhReligiousInfo,

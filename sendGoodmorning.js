@@ -11,10 +11,10 @@ async function greet(userId) {
   console.log('Fetching Sikh religious information...');
   const religiousInfo = await geminiService.getSikhReligiousInfo();
 
-  // have a good day in devnagri
-  const hindiMessage = religiousInfo.hindi + '\n\n'+ 'आपका दिन शुभ हो!';
+  //prepend sat shri akal in hindi have a good day in devnagri
+  const hindiMessage = 'सत श्री अकाल।।\n' + religiousInfo.hindi + '\n\n'+ 'आपका दिन शुभ हो!';
   // have a good day in english
-  const englishMessage = religiousInfo.english + '\n\n' + 'Have a great day!';
+  const englishMessage = 'Sat Sri Akal.\n' + religiousInfo.english + '\n\n' + 'Have a great day!';
 
   console.log('Sending Hindi message...');
   await discordService.sendMessageToUser(userId, hindiMessage);
@@ -152,9 +152,11 @@ async function sendGoodMorning() {
       throw new Error('DISCORD_MASTER_ID environment variable is not set');
     }
 
-    // Send greetings
+    // Send greetings flavour 1
     await greet(masterUserId);
     
+    // Send greetings flavour 2
+    await greet(masterUserId);
     
     // Send RSS feed news - you can choose to summarize or send raw
     // Option 1: Send summarized news (default)
