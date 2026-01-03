@@ -33,6 +33,17 @@ function getVerseForToday(sukhmaniText) {
     .map(line => line.trim())
     .filter(line => line.length > 0);
   
+  // Validate we have enough lines
+  if (lines.length < 2) {
+    return {
+      line1: 'सत श्री अकाल।।',
+      line2: 'वाहिगुरू जी का खालसा, वाहिगुरू जी की फतेह।।',
+      pairNumber: 1,
+      totalPairs: 1,
+      dayOfYear: 1
+    };
+  }
+  
   // Get day of year (1-365/366)
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
@@ -41,17 +52,16 @@ function getVerseForToday(sukhmaniText) {
   const dayOfYear = Math.floor(diff / oneDay) + 1;
   
   // Calculate total possible verse pairs (consecutive lines)
-  const totalPairs = Math.max(0, lines.length - 1);
+  const totalPairs = lines.length - 1;
   
   // Use modulus to select a unique pair for each day
   const pairIndex = (dayOfYear - 1) % totalPairs;
-  const startLineIndex = pairIndex;
   
   // Get the two lines for today with bounds checking
-  if (startLineIndex >= 0 && startLineIndex + 1 < lines.length) {
+  if (pairIndex + 1 < lines.length) {
     const verse = {
-      line1: lines[startLineIndex],
-      line2: lines[startLineIndex + 1],
+      line1: lines[pairIndex],
+      line2: lines[pairIndex + 1],
       pairNumber: pairIndex + 1,
       totalPairs: totalPairs,
       dayOfYear: dayOfYear
@@ -59,10 +69,10 @@ function getVerseForToday(sukhmaniText) {
     return verse;
   }
   
-  // Fallback in case of any issues
+  // Fallback to first two lines if bounds check fails
   return {
-    line1: lines[0] || '',
-    line2: lines[1] || '',
+    line1: lines[0],
+    line2: lines[1],
     pairNumber: 1,
     totalPairs: totalPairs,
     dayOfYear: dayOfYear
@@ -105,6 +115,10 @@ async function getSikhReligiousInfo() {
     // Get today's unique verse
     const todaysVerse = getVerseForToday(sukhmaniSahibText);
     
+    // Validate verse content before using in prompt
+    const verseLine1 = (todaysVerse.line1 || '').trim() || 'सत श्री अकाल।।';
+    const verseLine2 = (todaysVerse.line2 || '').trim() || 'वाहिगुरू जी का खालसा, वाहिगुरू जी की फतेह।।';
+    
     const prompt = `Today is ${dateStr}. 
 
 STEP 1 - CHECK SPECIAL DAYS (HIGHEST PRIORITY):
@@ -130,8 +144,8 @@ STEP 2 - RESPONSE FORMAT:
 - Set isSpecialDay: false
 - You MUST use these EXACT verse lines from Sukhmani Sahib:
 
-  Line 1 (Gurmukhi): ${todaysVerse.line1}
-  Line 2 (Gurmukhi): ${todaysVerse.line2}
+  Line 1 (Gurmukhi): ${verseLine1}
+  Line 2 (Gurmukhi): ${verseLine2}
 
 - hindi:
   1. First, write these two lines in Hindi/Devanagari script (देवनागरी)
