@@ -35,28 +35,38 @@ function getVerseForToday(sukhmaniText) {
   
   // Get day of year (1-365/366)
   const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
+  const start = new Date(now.getFullYear(), 0, 1);
   const diff = now - start;
   const oneDay = 1000 * 60 * 60 * 24;
-  const dayOfYear = Math.floor(diff / oneDay);
+  const dayOfYear = Math.floor(diff / oneDay) + 1;
   
-  // Calculate total possible verse pairs (2 consecutive lines)
-  const totalPairs = Math.floor(lines.length / 2);
+  // Calculate total possible verse pairs (consecutive lines)
+  const totalPairs = Math.max(0, lines.length - 1);
   
   // Use modulus to select a unique pair for each day
-  const pairIndex = dayOfYear % totalPairs;
-  const startLineIndex = pairIndex * 2;
+  const pairIndex = (dayOfYear - 1) % totalPairs;
+  const startLineIndex = pairIndex;
   
-  // Get the two lines for today
-  const verse = {
-    line1: lines[startLineIndex] || '',
-    line2: lines[startLineIndex + 1] || '',
-    pairNumber: pairIndex + 1,
+  // Get the two lines for today with bounds checking
+  if (startLineIndex >= 0 && startLineIndex + 1 < lines.length) {
+    const verse = {
+      line1: lines[startLineIndex],
+      line2: lines[startLineIndex + 1],
+      pairNumber: pairIndex + 1,
+      totalPairs: totalPairs,
+      dayOfYear: dayOfYear
+    };
+    return verse;
+  }
+  
+  // Fallback in case of any issues
+  return {
+    line1: lines[0] || '',
+    line2: lines[1] || '',
+    pairNumber: 1,
     totalPairs: totalPairs,
     dayOfYear: dayOfYear
   };
-  
-  return verse;
 }
 
 /**
