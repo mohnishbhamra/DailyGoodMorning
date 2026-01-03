@@ -6,9 +6,9 @@ const path = require('path');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODEL_NAME = "gemini-2.5-flash";
 
-// Default fallback verses
-const DEFAULT_VERSE_LINE1 = 'सत श्री अकाल।।';
-const DEFAULT_VERSE_LINE2 = 'वाहिगुरू जी का खालसा, वाहिगुरू जी की फतेह।।';
+// Default fallback verses (first meaningful verses from Sukhmani Sahib)
+const DEFAULT_VERSE_LINE1 = 'सिमरउ सिमरि सिमरि सुखु पावउ ॥ कलि कलेस तन माहि मिटावउ ॥';
+const DEFAULT_VERSE_LINE2 = 'सिमरउ जासु बिसु्मभर एकै ॥ नामु जपत अगनत अनेकै ॥';
 
 /**
  * Read Sukhmani Sahib text from file
@@ -171,8 +171,8 @@ CRITICAL INSTRUCTIONS:
   } catch (error) {
     console.error('Error fetching Sikh religious info:', error);
     return { 
-      hindi: 'सत श्री अकाल।।',
-      english: 'Sat Sri Akal.'
+      hindi: 'आज की शिक्षा उपलब्ध नहीं है।',
+      english: 'Today\'s message is not available.'
     };
   }
 }
