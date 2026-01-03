@@ -35,7 +35,15 @@ function getVerseForToday(sukhmaniText) {
   const lines = sukhmaniText
     .split(/[॥\n]/)
     .map(line => line.trim())
-    .filter(line => line.length > 0);
+    .filter(line => line.length > 5);
+  
+  // single line verses don't make sense, so we use consecutive lines like 0+1 , 2+3 as pairs and make new array of refined lines
+  const pairedLines = lines.reduce((acc, line, index) => {
+    if (index % 2 === 0 && index + 1 < lines.length) {
+      acc.push([line, lines[index + 1]]);
+    } 
+    return acc;
+  }, []);
   
   // Validate we have enough lines
   if (lines.length < 2) {
@@ -56,19 +64,27 @@ function getVerseForToday(sukhmaniText) {
   const dayOfYear = Math.floor(diff / oneDay) + 1;
   
   // Calculate total possible verse pairs (consecutive lines)
-  const totalPairs = lines.length - 1;
+  const totalPairs = pairedLines.length;
   
   // Use modulus to select a unique pair for each day
   const pairIndex = (dayOfYear - 1) % totalPairs;
-  
+  const step = Math.floor(totalPairs/365);
+  const startStep = pairIndex * step;
+  const endStep = startStep + step - 1;
+  const pairIndexRandom = getRandomInt(startStep, endStep);
+  const pair = pairedLines[pairIndexRandom];
   // Get the two lines for today (bounds guaranteed by modulus operation)
   return {
-    line1: lines[pairIndex],
-    line2: lines[pairIndex + 1],
+    line1: pair[0],
+    line2: pair[1],
     pairNumber: pairIndex + 1,
     totalPairs: totalPairs,
     dayOfYear: dayOfYear
   };
+}
+
+function getRandomInt(x, y) {
+  return Math.floor(Math.random() * (y - x + 1)) + x;
 }
 
 /**
@@ -136,12 +152,12 @@ STEP 2 - RESPONSE FORMAT:
 - Set isSpecialDay: false
 - You MUST use these EXACT verse lines from Sukhmani Sahib:
 
-  Line 1 (Gurmukhi): ${verseLine1}
-  Line 2 (Gurmukhi): ${verseLine2}
+  Line 1 (Gurmukhi): ${verseLine1+' ॥ \n'}
+  Line 2 (Gurmukhi): ${verseLine2+' ॥ \n'}
 
 - hindi:
-  1. First, write these two lines in Hindi/Devanagari script (देवनागरी)
-  2. Then provide the MEANING/TRANSLATION of these lines in Hindi (what do these lines mean?)
+  1. First, write these two lines in Hindi/Devanagari script as it is(देवनागरी)
+  2. Then in new line provide the MEANING/TRANSLATION of these lines in Hindi (what do these lines mean?)
   3. Finally, explain the spiritual teaching and wisdom from these lines (4-5 sentences in Hindi)
   
 - english:
