@@ -6,9 +6,9 @@ const path = require('path');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODEL_NAME = "gemini-2.5-flash";
 
-// Default fallback verses (first meaningful verses from Sukhmani Sahib)
-const DEFAULT_VERSE_LINE1 = 'सिमरउ सिमरि सिमरि सुखु पावउ ॥ कलि कलेस तन माहि मिटावउ ॥';
-const DEFAULT_VERSE_LINE2 = 'सिमरउ जासु बिसु्मभर एकै ॥ नामु जपत अगनत अनेकै ॥';
+// Default fallback verses (single verse lines from Sukhmani Sahib)
+const DEFAULT_VERSE_LINE1 = 'सिमरउ सिमरि सिमरि सुखु पावउ';
+const DEFAULT_VERSE_LINE2 = 'कलि कलेस तन माहि मिटावउ';
 
 /**
  * Read Sukhmani Sahib text from file
@@ -31,9 +31,9 @@ async function readSukhmaniSahib() {
  * @returns {Object} Selected verse lines and metadata
  */
 function getVerseForToday(sukhmaniText) {
-  // Split into lines and clean up
+  // Split by verse markers (॥) and newlines, then clean up
   const lines = sukhmaniText
-    .split('\n')
+    .split(/[॥\n]/)
     .map(line => line.trim())
     .filter(line => line.length > 0);
   
