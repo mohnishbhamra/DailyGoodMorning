@@ -6,6 +6,10 @@ const path = require('path');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODEL_NAME = "gemini-2.5-flash";
 
+// Default fallback verses
+const DEFAULT_VERSE_LINE1 = 'सत श्री अकाल।।';
+const DEFAULT_VERSE_LINE2 = 'वाहिगुरू जी का खालसा, वाहिगुरू जी की फतेह।।';
+
 /**
  * Read Sukhmani Sahib text from file
  * @returns {Promise<string>} Full text of Sukhmani Sahib
@@ -36,8 +40,8 @@ function getVerseForToday(sukhmaniText) {
   // Validate we have enough lines
   if (lines.length < 2) {
     return {
-      line1: 'सत श्री अकाल।।',
-      line2: 'वाहिगुरू जी का खालसा, वाहिगुरू जी की फतेह।।',
+      line1: DEFAULT_VERSE_LINE1,
+      line2: DEFAULT_VERSE_LINE2,
       pairNumber: 1,
       totalPairs: 1,
       dayOfYear: 1
@@ -57,23 +61,11 @@ function getVerseForToday(sukhmaniText) {
   // Use modulus to select a unique pair for each day
   const pairIndex = (dayOfYear - 1) % totalPairs;
   
-  // Get the two lines for today with bounds checking
-  if (pairIndex + 1 < lines.length) {
-    const verse = {
-      line1: lines[pairIndex],
-      line2: lines[pairIndex + 1],
-      pairNumber: pairIndex + 1,
-      totalPairs: totalPairs,
-      dayOfYear: dayOfYear
-    };
-    return verse;
-  }
-  
-  // Fallback to first two lines if bounds check fails
+  // Get the two lines for today (bounds guaranteed by modulus operation)
   return {
-    line1: lines[0],
-    line2: lines[1],
-    pairNumber: 1,
+    line1: lines[pairIndex],
+    line2: lines[pairIndex + 1],
+    pairNumber: pairIndex + 1,
     totalPairs: totalPairs,
     dayOfYear: dayOfYear
   };
@@ -116,8 +108,8 @@ async function getSikhReligiousInfo() {
     const todaysVerse = getVerseForToday(sukhmaniSahibText);
     
     // Validate verse content before using in prompt
-    const verseLine1 = (todaysVerse.line1 || '').trim() || 'सत श्री अकाल।।';
-    const verseLine2 = (todaysVerse.line2 || '').trim() || 'वाहिगुरू जी का खालसा, वाहिगुरू जी की फतेह।।';
+    const verseLine1 = (todaysVerse.line1 || '').trim() || DEFAULT_VERSE_LINE1;
+    const verseLine2 = (todaysVerse.line2 || '').trim() || DEFAULT_VERSE_LINE2;
     
     const prompt = `Today is ${dateStr}. 
 
