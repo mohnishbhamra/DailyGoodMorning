@@ -22,6 +22,44 @@ async function readSukhmaniSahib() {
 }
 
 /**
+ * Get a unique verse from Sukhmani Sahib based on day of year
+ * @param {string} sukhmaniText - Full text of Sukhmani Sahib
+ * @returns {Object} Selected verse lines and metadata
+ */
+function getVerseForToday(sukhmaniText) {
+  // Split into lines and clean up
+  const lines = sukhmaniText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  
+  // Get day of year (1-365/366)
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  const oneDay = 1000 * 60 * 60 * 24;
+  const dayOfYear = Math.floor(diff / oneDay);
+  
+  // Calculate total possible verse pairs (2 consecutive lines)
+  const totalPairs = Math.floor(lines.length / 2);
+  
+  // Use modulus to select a unique pair for each day
+  const pairIndex = dayOfYear % totalPairs;
+  const startLineIndex = pairIndex * 2;
+  
+  // Get the two lines for today
+  const verse = {
+    line1: lines[startLineIndex] || '',
+    line2: lines[startLineIndex + 1] || '',
+    pairNumber: pairIndex + 1,
+    totalPairs: totalPairs,
+    dayOfYear: dayOfYear
+  };
+  
+  return verse;
+}
+
+/**
  * Get Sikh religious information for today
  * @returns {Promise<string>} Information about today's Sikh religious significance
  */
@@ -34,6 +72,7 @@ async function getSikhReligiousInfo() {
         responseSchema: {
           type: "OBJECT",
           properties: {
+            isSpecialDay: { type: "BOOLEAN" },
             hindi: { type: "STRING" },
             english: { type: "STRING" }
           }
@@ -53,22 +92,53 @@ async function getSikhReligiousInfo() {
     // Read Sukhmani Sahib text
     const sukhmaniSahibText = await readSukhmaniSahib();
     
-    const prompt = `Today is ${dateStr}. Please check if today is significant in Sikhism also check by NanakShahi calendar. Specifically check if today is:
+    // Get today's unique verse
+    const todaysVerse = getVerseForToday(sukhmaniSahibText);
+    
+    const prompt = `Today is ${dateStr}. 
+
+STEP 1 - CHECK SPECIAL DAYS (HIGHEST PRIORITY):
+Please carefully check if today is significant in Sikhism according to the Nanakshahi calendar. Check if today is:
 1. Birthday (Parkash Purab) of any of the 10 Sikh Gurus
-2. Martyrdom day (Shaheedi Divas) of any Sikh Guru
+2. Martyrdom day (Shaheedi Divas) of any Sikh Guru or Sikh martyrs
 3. Sangrand (first day of a month in the Nanakshahi calendar)
-4. Bandi Chhor Divas
-5. Any other important Sikh religious day
-Must not mention today date or something like today
-If today is significant, provide a brief description (2-3 sentences) about the significance.
-If today is not a special Sikh religious day qoute a verse from sukhmani sahib in hindi and explain its teaching in hindi as people dont know exact gurmukhi(always convert gurmukhi manuscript to hindi), dont mention today is not a sikh special day or something like this, just in a subtle way add guru's verse/qoute from sukhmani sahib.
-Keep the response concise and respectful.
-Must write your content in 2 language Recommend 1.Hindi 2.English
+4. Bandi Chhor Divas (Diwali)
+5. Vaisakhi (Khalsa foundation day)
+6. Hola Mohalla
+7. Any other important Sikh religious day or Gurpurab
 
-Here is the complete text of Sukhmani Sahib for accurate reference:
-${sukhmaniSahibText}
+STEP 2 - RESPONSE FORMAT:
 
-IMPORTANT: When quoting from Sukhmani Sahib, use the EXACT text provided above. Do not paraphrase or modify the verses.`;
+**If today IS a special Sikh religious day:**
+- Set isSpecialDay: true
+- hindi: Provide a detailed explanation (4-5 sentences) about the significance of this day in Hindi. Include historical context, religious importance, and how it is celebrated.
+- english: Provide a detailed explanation (4-5 sentences) about the significance of this day in English. Include historical context, religious importance, and how it is celebrated.
+- DO NOT mention the date explicitly (no "today is" or specific dates)
+- Focus on the spiritual and historical significance
+
+**If today is NOT a special Sikh religious day:**
+- Set isSpecialDay: false
+- You MUST use these EXACT verse lines from Sukhmani Sahib:
+
+  Line 1 (Gurmukhi): ${todaysVerse.line1}
+  Line 2 (Gurmukhi): ${todaysVerse.line2}
+
+- hindi:
+  1. First, write these two lines in Hindi/Devanagari script (देवनागरी)
+  2. Then provide the MEANING/TRANSLATION of these lines in Hindi (what do these lines mean?)
+  3. Finally, explain the spiritual teaching and wisdom from these lines (4-5 sentences in Hindi)
+  
+- english:
+  1. First, provide the English TRANSLATION of these two lines (what do these lines mean in English?)
+  2. Then explain the spiritual teaching and wisdom from these lines (4-5 sentences in English)
+  3. Explain how this teaching can be applied in daily life
+
+CRITICAL INSTRUCTIONS:
+- Special days take ABSOLUTE PRIORITY over Sukhmani Sahib verses
+- When using Sukhmani Sahib verses, you MUST provide the MEANING/TRANSLATION of the lines, not just explanation
+- Use the EXACT verse lines provided above if not a special day
+- Keep tone respectful, spiritual, and uplifting
+- Do not mention dates or "today" in the content`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -76,7 +146,12 @@ IMPORTANT: When quoting from Sukhmani Sahib, use the EXACT text provided above. 
     
     // Parse the JSON response
     const parsedResponse = JSON.parse(text);
-    return parsedResponse;
+    
+    // Return without isSpecialDay flag (internal use only)
+    return {
+      hindi: parsedResponse.hindi,
+      english: parsedResponse.english
+    };
   } catch (error) {
     console.error('Error fetching Sikh religious info:', error);
     return { 
